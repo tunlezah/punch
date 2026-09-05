@@ -1,0 +1,29 @@
+# GitLab CI: run the unit tests, then publish public/ to GitLab Pages.
+# There is no build step — public/ is served as-is. The only CI-time change is
+# stamping the service-worker cache name with the commit SHA so every deploy
+# invalidates the previous offline cache.
+image: node:22-alpine
+
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script:
+    - node --version
+    - npm test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
+pages:
+  stage: deploy
+  script:
+    - sed -i "s/__BUILD__/${CI_COMMIT_SHORT_SHA}/g" public/sw.js public/index.html
+    - ls -R public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

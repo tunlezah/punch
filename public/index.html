@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-AU" data-accent="teal">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Punch — timesheet</title>
+  <meta name="description" content="A single-user timesheet that records the working day with a few big buttons and saves everything to a Markdown file.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0f1216">
+  <meta name="build" content="__BUILD__">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#view">Skip to content</a>
+  <header class="topbar">
+    <div class="brand" aria-label="Punch">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="28" height="28"><rect x="2" y="2" width="60" height="60" rx="14" fill="var(--accent)"/><circle cx="32" cy="32" r="19" fill="none" stroke="var(--accent-fg)" stroke-width="3.5"/><path d="M32 32 L24 26.4 M32 32 L41.2 20.6" stroke="var(--accent-fg)" stroke-width="3.2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-name">Punch</span>
+    </div>
+    <nav class="tabs" aria-label="Views" id="tabs">
+      <button type="button" class="tab" data-view="today" aria-current="page">Today <kbd class="key" aria-hidden="true">1</kbd></button>
+      <button type="button" class="tab" data-view="recent">Recent <kbd class="key" aria-hidden="true">2</kbd></button>
+      <button type="button" class="tab" data-view="history">History <kbd class="key" aria-hidden="true">3</kbd></button>
+      <button type="button" class="tab" data-view="settings">Settings <kbd class="key" aria-hidden="true">4</kbd></button>
+    </nav>
+    <div class="topbar-right">
+      <div id="save-indicator" class="save-indicator" aria-live="polite" aria-atomic="true"></div>
+      <button type="button" id="theme-btn" class="icon-btn" aria-label="Cycle theme" title="Cycle theme (D)"></button>
+      <button type="button" id="help-btn" class="icon-btn" aria-label="Help" title="Help (?)"></button>
+    </div>
+  </header>
+
+  <div id="banners" class="banners" aria-live="polite"></div>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <section id="print-area" class="print-area" aria-hidden="true"></section>
+
+  <noscript><p class="noscript">Punch needs JavaScript — everything runs locally in your browser.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
