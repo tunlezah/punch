@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeConfig, spanDays, derive, resolveDay, makeCtx } from '../public/js/calc.js';
-import { normalizeState, startSpan, endSpan, markRange, setDay } from '../public/js/model.js';
+import { normalizeState, startSpan, endSpan, markRange, setDay, loadHolidays, updateHoliday, deleteHoliday } from '../public/js/model.js';
+import { regionHolidays } from '../public/js/holidays.js';
 
 const NOW = new Date('2026-09-05T10:00:00');
 const cfg = (patch = {}) => normalizeConfig(patch);
@@ -90,9 +91,14 @@ test('markRange makes a single record or a span', () => {
   assert.equal(s.spans[0].type, 'Sick');
 });
 
-test('public holidays from the region list are virtual days that explicit records override', () => {
+test('listed public holidays are virtual days that explicit records override, and the list is editable', () => {
   let s = normalizeState({ config: cfg({ holidayRegion: 'ACT' }) });
   const now = new Date('2026-10-10T10:00:00');
+  // Nothing is pre-marked until the list is loaded.
+  assert.equal(resolveDay(s, '2026-10-05', makeCtx(s, now)).source, 'none');
+  s = loadHolidays(s, regionHolidays('ACT'));
+  assert.equal(s.holidays.length, regionHolidays('ACT').length);
+  assert.equal(loadHolidays(s, regionHolidays('ACT')).holidays.length, s.holidays.length, 'loading twice adds nothing');
   let d = derive(s, now);
   const labour = d.get('2026-10-05');
   assert.equal(labour.day.type, 'PublicHoliday');
@@ -106,7 +112,14 @@ test('public holidays from the region list are virtual days that explicit record
   // Worked that day? An explicit record wins.
   s = setDay(s, '2026-10-05', { type: 'Work', in: '09:00', home: '13:00' }, now);
   assert.equal(derive(s, now).get('2026-10-05').day.type, 'Work');
-  // No region → nothing pre-marked.
-  const none = normalizeState({ config: cfg({ holidayRegion: 'none' }) });
-  assert.equal(resolveDay(none, '2026-10-05', makeCtx(none, now)).source, 'none');
+  // The list is not locked: move Labour Day to the Tuesday, rename, or remove.
+  const idx = s.holidays.findIndex((hd) => hd.date === '2026-10-05');
+  const moved = updateHoliday(s, idx, { date: '2026-10-06', name: 'Labour Day (observed Tuesday)' });
+  assert.equal(derive(moved, now).get('2026-10-06').day.type, 'PublicHoliday');
+  assert.equal(derive(moved, now).get('2026-10-06').day.notes, 'Labour Day (observed Tuesday)');
+  const removed = deleteHoliday(s, idx);
+  assert.equal(removed.holidays.length, s.holidays.length - 1);
+  // Two entries for one date collapse to the last one.
+  const dup = normalizeState({ holidays: [{ date: '2026-12-25', name: 'A' }, { date: '2026-12-25', name: 'B' }, { date: 'bad' }] });
+  assert.deepEqual(dup.holidays, [{ date: '2026-12-25', name: 'B' }]);
 });

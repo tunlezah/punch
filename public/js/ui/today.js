@@ -132,7 +132,7 @@ export function renderToday(root, app) {
       bigBtn({ label: ts.tdySpan ? 'TDY end' : 'TDY start', key: 'T', iconName: 'plane', onClick: () => actions.toggleTdy(app),
         sub: ts.tdySpan ? `Since ${au(ts.tdySpan.start)} ${ts.tdySpan.startTime || ''}` : 'Date and time, prefilled with now', primary: Boolean(ts.tdySpan) }),
       bigBtn({ label: 'Sick', key: 'S', iconName: 'thermometer', onClick: () => actions.pressSick(app), sub: 'Today, or a date range' }),
-      bigBtn({ label: 'Public holiday', key: 'P', iconName: 'flag', onClick: () => actions.pressPublicHoliday(app), sub: cfg.holidayRegion !== 'none' ? `${cfg.holidayRegion} holidays are pre-marked` : 'Mark a date' }),
+      bigBtn({ label: 'Public holiday', key: 'P', iconName: 'flag', onClick: () => actions.pressPublicHoliday(app), sub: state.holidays.length ? `${state.holidays.length} listed dates are pre-marked` : 'Mark a date' }),
     ));
 
   // ---- status panel ---------------------------------------------------------

@@ -20,6 +20,7 @@ export const DEFAULT_FILE_NAME = 'timesheet.md';
 const DAY_COLUMNS = ['Date', 'Day', 'Type', 'In', 'Lunch out', 'Lunch back', 'Home', 'Worked', 'Std', 'Δ', 'Notes'];
 const LEAVE_COLUMNS = ['Type', 'Start', 'End', 'Hours/day', 'Notes'];
 const TOIL_COLUMNS = ['Date', 'Adjustment', 'Reason'];
+const HOLIDAY_COLUMNS = ['Date', 'Day', 'Name'];
 
 const esc = (s) => String(s ?? '').replace(/\|/g, '\\|');
 
@@ -77,6 +78,9 @@ export function render(state, now = new Date()) {
 
   out.push('## TOIL adjustments', '');
   out.push(...table(TOIL_COLUMNS, state.adjustments.map((a) => [a.date, fmtDelta(a.minutes), a.reason])), '');
+
+  out.push('## Public holidays', '');
+  out.push(...table(HOLIDAY_COLUMNS, state.holidays.map((hd) => [hd.date, dayName(hd.date), hd.name])), '');
 
   for (const p of periodsWithRecords(state)) {
     out.push(`## Pay period ${periodKey(p)}`, '');
@@ -182,6 +186,10 @@ const TOIL_HEADER_KEYS = {
   date: 'date', adjustment: 'minutes', hours: 'minutes', amount: 'minutes', 'δ': 'minutes', delta: 'minutes',
   reason: 'reason', notes: 'reason', note: 'reason',
 };
+const HOLIDAY_HEADER_KEYS = {
+  date: 'date', day: 'day', name: 'name', holiday: 'name', 'public holiday': 'name', notes: 'name', note: 'name', description: 'name',
+};
+const DEFAULT_HOLIDAY_COLS = ['date', 'day', 'name'];
 const DEFAULT_DAY_COLS = ['date', 'day', 'type', 'in', 'lunchOut', 'lunchBack', 'home', 'worked', 'std', 'delta', 'notes'];
 const DEFAULT_LEAVE_COLS = ['type', 'start', 'end', 'hoursPerDay', 'notes'];
 const DEFAULT_TOIL_COLS = ['date', 'minutes', 'reason'];
@@ -208,6 +216,7 @@ function cellsByKey(cells, cols) {
 function classifySection(title) {
   const t = title.toLowerCase();
   if (/^config/.test(t)) return 'config';
+  if (/public holiday/.test(t)) return 'holidays';
   if (/leave|travel/.test(t)) return 'leave';
   if (/toil|adjust/.test(t)) return 'toil';
   if (/^pay period|^period|^fortnight|^week/.test(t)) return 'period';
@@ -280,6 +289,7 @@ export function parse(text) {
   const days = [];
   const spans = [];
   const adjustments = [];
+  const holidays = [];
   const unparsed = [];
   let section = 'preamble';
   let inYaml = false;
@@ -333,6 +343,15 @@ export function parse(text) {
     return true;
   };
 
+  const parseHolidayRow = (cells) => {
+    const c = cols || DEFAULT_HOLIDAY_COLS;
+    const v = cellsByKey(cells, c);
+    const date = parseDateCell(v.date);
+    if (!date) return false;
+    holidays.push({ date, name: v.name ?? '' });
+    return true;
+  };
+
   const parseToilRow = (cells) => {
     const c = cols || DEFAULT_TOIL_COLS;
     const v = cellsByKey(cells, c);
@@ -372,9 +391,9 @@ export function parse(text) {
     if (t.startsWith('|')) {
       const cells = splitRow(t);
       if (isSeparator(cells)) continue;
-      const keys = section === 'leave' ? LEAVE_HEADER_KEYS : section === 'toil' ? TOIL_HEADER_KEYS : DAY_HEADER_KEYS;
+      const keys = section === 'leave' ? LEAVE_HEADER_KEYS : section === 'toil' ? TOIL_HEADER_KEYS : section === 'holidays' ? HOLIDAY_HEADER_KEYS : DAY_HEADER_KEYS;
       if (looksLikeHeader(cells, keys)) { cols = headerCols(cells, keys); continue; }
-      const ok = section === 'leave' ? parseLeaveRow(cells) : section === 'toil' ? parseToilRow(cells) : parseDayRow(cells);
+      const ok = section === 'leave' ? parseLeaveRow(cells) : section === 'toil' ? parseToilRow(cells) : section === 'holidays' ? parseHolidayRow(cells) : parseDayRow(cells);
       if (!ok) unparsed.push(line);
       continue;
     }
@@ -388,7 +407,7 @@ export function parse(text) {
   }
   delete cfg._weekMinutes;
 
-  return normalizeState({ config: cfg, days, spans, adjustments, unparsed });
+  return normalizeState({ config: cfg, days, spans, adjustments, holidays, unparsed });
 }
 
 /** Read only the last_saved stamp out of a file without a full parse. */

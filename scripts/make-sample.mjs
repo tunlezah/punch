@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as model from '../public/js/model.js';
 import { render } from '../public/js/markdown.js';
+import { regionHolidays } from '../public/js/holidays.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const NOW = new Date('2026-09-05T09:12:00+10:00');
@@ -17,6 +18,9 @@ s = model.updateConfig(s, {
   theme: 'system',
   accent: 'teal',
 });
+
+// The ACT public-holiday list, as loaded by choosing the jurisdiction in Settings.
+s = model.loadHolidays(s, regionHolidays('ACT'));
 
 const work = (date, tIn, lo, lb, home, notes = '') => {
   s = model.clockIn(s, date, tIn, NOW);

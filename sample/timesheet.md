@@ -36,6 +36,42 @@ reminder_time:
 | 2026-07-27 | +2:15      | Opening balance carried over                 |
 | 2026-08-25 | +5:24      | TDY variance accepted (worked 13:00 vs 7:36) |
 
+## Public holidays
+
+| Date       | Day | Name                           |
+|------------|-----|--------------------------------|
+| 2026-01-01 | Thu | New Year's Day                 |
+| 2026-01-26 | Mon | Australia Day                  |
+| 2026-03-09 | Mon | Canberra Day                   |
+| 2026-04-03 | Fri | Good Friday                    |
+| 2026-04-04 | Sat | Easter Saturday                |
+| 2026-04-05 | Sun | Easter Sunday                  |
+| 2026-04-06 | Mon | Easter Monday                  |
+| 2026-04-25 | Sat | Anzac Day                      |
+| 2026-04-27 | Mon | Anzac Day (additional day)     |
+| 2026-06-01 | Mon | Reconciliation Day             |
+| 2026-06-08 | Mon | King's Birthday                |
+| 2026-10-05 | Mon | Labour Day                     |
+| 2026-12-25 | Fri | Christmas Day                  |
+| 2026-12-26 | Sat | Boxing Day                     |
+| 2026-12-28 | Mon | Boxing Day (additional day)    |
+| 2027-01-01 | Fri | New Year's Day                 |
+| 2027-01-26 | Tue | Australia Day                  |
+| 2027-03-08 | Mon | Canberra Day                   |
+| 2027-03-26 | Fri | Good Friday                    |
+| 2027-03-27 | Sat | Easter Saturday                |
+| 2027-03-28 | Sun | Easter Sunday                  |
+| 2027-03-29 | Mon | Easter Monday                  |
+| 2027-04-25 | Sun | Anzac Day                      |
+| 2027-04-26 | Mon | Anzac Day (additional day)     |
+| 2027-05-31 | Mon | Reconciliation Day             |
+| 2027-06-14 | Mon | King's Birthday                |
+| 2027-10-04 | Mon | Labour Day                     |
+| 2027-12-25 | Sat | Christmas Day                  |
+| 2027-12-26 | Sun | Boxing Day                     |
+| 2027-12-27 | Mon | Christmas Day (additional day) |
+| 2027-12-28 | Tue | Boxing Day (additional day)    |
+
 ## Pay period 2026-08-27 → 2026-09-09
 
 | Date       | Day | Type | In    | Lunch out | Lunch back | Home  | Worked | Std  | Δ     | Notes                   |

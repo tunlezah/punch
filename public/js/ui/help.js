@@ -23,7 +23,7 @@ export function helpContent(app) {
       h('li', {}, h('b', {}, 'Holiday'), ' opens a span (tomorrow if you have worked today). Every working day in it is credited a standard day; day buttons are disabled until End holiday.'),
       h('li', {}, h('b', {}, 'TDY'), ' opens a span with date and time. Days are credited a standard day, but you can still clock actual times and those win. Over or under hours on TDY days are ', h('b', {}, 'not'), ' added to TOIL until you confirm them in the Today view.'),
       h('li', {}, h('b', {}, 'Sick'), ' credits a standard day for a day or a range. If you have already clocked in it asks whether to convert today or start tomorrow.'),
-      h('li', {}, h('b', {}, 'Public holiday'), ' credits a standard day. Pick your state or territory in Settings to pre-mark the 2026–2027 holidays.'),
+      h('li', {}, h('b', {}, 'Public holiday'), ' credits a standard day. Pick your state or territory in Settings to load the 2026–2027 dates into the file’s public-holiday list: any listed date is pre-marked automatically unless the day has its own record, and the list itself can be edited — move a date, rename it, remove one, add a local one.'),
       h('li', {}, h('b', {}, 'Off'), ' marks a non-working day: no standard hours, no credit.'),
       h('li', {}, 'Every cell in the Recent view is editable, including the hours credited to a leave or TDY day. Spans are edited at the bottom of the Recent view.'),
     ),

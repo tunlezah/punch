@@ -6,7 +6,7 @@ import {
   DAY_NAMES, isISODate, addDays, diffDays, weekdayIndex, dayName, dateRange,
   parseHHMM, normHHMM, roundMinutes, minISO, maxISO, todayISO, nowMinutes,
 } from './time.js';
-import { holidayMap, isKnownRegion } from './holidays.js';
+import { isKnownRegion } from './holidays.js';
 
 export const TYPES = ['Work', 'Holiday', 'Sick', 'PublicHoliday', 'TDY', 'Off'];
 export const SPAN_TYPES = ['Holiday', 'TDY', 'Sick'];
@@ -157,7 +157,7 @@ export function openSpan(spans, type) {
 }
 
 // ---------------------------------------------------------------------------
-// Resolving a date to a day (explicit record → public holiday → span → blank)
+// Resolving a date to a day (explicit record → public-holiday list → span → blank)
 
 export function blankRecord(iso, type = 'Work') {
   return { date: iso, type, in: '', lunchOut: '', lunchBack: '', home: '', creditedHours: null, notes: '' };
@@ -175,7 +175,7 @@ export function makeCtx(state, now = new Date()) {
   return {
     today,
     nowMin: nowMinutes(now),
-    holidays: holidayMap(state.config.holidayRegion),
+    holidays: new Map((state.holidays || []).map((hd) => [hd.date, hd.name])),
     balanceStart: state.config.balanceStart || firstDataDate(state) || today,
     adjustmentsByDate,
   };

@@ -99,6 +99,15 @@ export function renderHistory(root, app) {
         h('tbody', {}, [...state.adjustments].reverse().map((a) => h('tr', { dataset: { search: `${a.date} ${au(a.date)} ${fmtDelta(a.minutes)} ${a.reason}`.toLowerCase() } },
           h('td', {}, fmtDateAU(a.date)), h('td', { class: `num ${a.minutes > 0 ? 'pos' : a.minutes < 0 ? 'neg' : ''}` }, fmtD(a.minutes)), h('td', { class: 'notes' }, a.reason)))))) : h('p', { class: 'muted' }, 'None.')));
 
+    // Public holidays
+    content.append(h('section', { class: 'card', dataset: { section: 'holidays' } },
+      h('div', { class: 'card-head' }, h('h3', {}, icon('flag', 16), 'Public holidays'), h('span', { class: 'sub' }, `${state.holidays.length} listed · edit in Settings`)),
+      state.holidays.length ? h('div', { class: 'table-wrap' }, h('table', { class: 'grid readonly-table' },
+        h('thead', {}, h('tr', {}, h('th', {}, 'Date'), h('th', {}, 'Name'), h('th', {}, 'Applied'))),
+        h('tbody', {}, state.holidays.map((hd) => h('tr', { dataset: { search: `${hd.date} ${au(hd.date)} ${dayName(hd.date)} ${hd.name} public holiday`.toLowerCase() } },
+          h('td', {}, fmtDateAU(hd.date)), h('td', { class: 'notes' }, hd.name),
+          h('td', {}, state.days[hd.date] ? h('span', { class: 'badge' }, `overridden by ${TYPE_LABELS[state.days[hd.date].type]} record`) : h('span', { class: 'badge accent' }, 'yes'))))))) : h('p', { class: 'muted' }, 'None listed. Pick a jurisdiction in Settings to add the 2026–2027 dates.')));
+
     // Periods
     for (const p of periods) {
       const dates = dateRange(p.start, p.end).filter((iso) => d.get(iso).day.source !== 'none');

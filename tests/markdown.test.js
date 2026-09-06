@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { render, parse, peekLastSaved, splitRow, parseDateCell, parseType } from '../public/js/markdown.js';
-import { emptyState, clockIn, clockLunchOut, clockLunchBack, clockHome, markDay, addSpan, addAdjustment, updateConfig, normalizeState } from '../public/js/model.js';
+import { emptyState, clockIn, clockLunchOut, clockLunchBack, clockHome, markDay, addSpan, addAdjustment, updateConfig, normalizeState, loadHolidays } from '../public/js/model.js';
+import { regionHolidays } from '../public/js/holidays.js';
 
 const NOW = new Date('2026-09-05T10:00:00');
 
@@ -24,6 +25,7 @@ function sampleState() {
   s = addSpan(s, { type: 'Sick', start: '2026-08-17', end: '2026-08-18', hoursPerDay: 600, notes: '' });
   s = addAdjustment(s, { date: '2026-08-25', minutes: 324, reason: 'TDY variance accepted' });
   s = addAdjustment(s, { date: '2026-07-27', minutes: 135, reason: 'Opening balance' });
+  s = loadHolidays(s, regionHolidays('ACT'));
   return s;
 }
 
@@ -45,6 +47,11 @@ test('rendered file has the documented layout', () => {
   assert.match(text, /\| Sick +\| 2026-08-17 +\| 2026-08-18 +\| 10:00 +\|/);
   assert.match(text, /## TOIL adjustments\n\n\| Date +\| Adjustment \| Reason/);
   assert.match(text, /\| 2026-08-25 \| \+5:24 +\| TDY variance accepted/);
+  assert.match(text, /## Public holidays\n\n\| Date +\| Day \| Name/);
+  assert.match(text, /\| 2026-06-01 \| Mon \| Reconciliation Day/);
+  const ph = text.indexOf('## Public holidays');
+  const firstPeriod = text.indexOf('## Pay period');
+  assert.ok(ph > 0 && ph < firstPeriod, 'public holidays come before the pay periods');
   // newest period first
   const p0 = text.indexOf('## Pay period 2026-08-27 → 2026-09-09');
   const p1 = text.indexOf('## Pay period 2026-08-13 → 2026-08-26');
@@ -77,6 +84,14 @@ my_custom_key: keep me
 |---|---|---|---|---|
 |holiday|2026-10-05||   |Japan|
 | tdy | 14/09/2026 6:10 | 2026-09-17 19:40 | 7.6 | Melbourne |
+
+## Public holidays
+
+| Date | Day | Name |
+|---|---|---|
+| 05/10/2026 | | Labour Day |
+| 2026-10-06 | Tue | Local show day |
+| nope | | not a date |
 
 ## Pay period 2026-08-27 → 2026-09-09
 
@@ -113,14 +128,16 @@ Some stray prose the app does not understand.
   assert.equal(s.days['2026-09-02'].type, 'Holiday');
   assert.equal(s.days['2026-09-02'].creditedHours, 228);
   assert.equal(s.days['2026-09-01'].notes, 'Notes with | pipe');
-  assert.equal(s.unparsed.length, 3);
-  assert.match(s.unparsed[0], /8:3x/);
-  assert.match(s.unparsed[1], /not a date/);
-  assert.match(s.unparsed[2], /stray prose/);
+  assert.deepEqual(s.holidays, [{ date: '2026-10-05', name: 'Labour Day' }, { date: '2026-10-06', name: 'Local show day' }]);
+  assert.equal(s.unparsed.length, 4);
+  assert.match(s.unparsed[0], /nope/);
+  assert.match(s.unparsed[1], /8:3x/);
+  assert.match(s.unparsed[2], /not a date/);
+  assert.match(s.unparsed[3], /stray prose/);
   // Unparsed lines survive a save/load cycle verbatim.
   const again = parse(render(s, NOW));
   assert.deepEqual(again, s);
-  assert.match(render(s, NOW), /## Unparsed\n\n\| 2026-09-05 \| Sat \| Work \| 8:3x/);
+  assert.match(render(s, NOW), /## Unparsed\n\n\| nope \| \| not a date \|\n\| 2026-09-05 \| Sat \| Work \| 8:3x/);
 });
 
 test('rows are regrouped by the configured pay periods, sorted, and the last duplicate wins', () => {
@@ -183,6 +200,7 @@ test('sample/timesheet.md round-trips exactly', () => {
   assert.ok(s.spans.some((x) => x.type === 'TDY'));
   assert.ok(Object.values(s.days).some((x) => x.type === 'Sick'));
   assert.ok(Object.values(s.days).some((x) => x.type === 'PublicHoliday'));
+  assert.ok(s.holidays.length >= 25, 'sample carries the ACT public-holiday list');
   const sampleNow = new Date('2026-09-05T09:12:00+10:00');
   assert.equal(render(s, sampleNow), text);
   assert.deepEqual(parse(render(s, sampleNow)), s);

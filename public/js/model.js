@@ -9,7 +9,7 @@ import {
 } from './calc.js';
 
 export function emptyState() {
-  return { config: normalizeConfig({}), days: {}, spans: [], adjustments: [], unparsed: [] };
+  return { config: normalizeConfig({}), days: {}, spans: [], adjustments: [], holidays: [], unparsed: [] };
 }
 
 export function cleanText(s) {
@@ -77,6 +77,12 @@ export function normalizeSpan(s, config) {
   };
 }
 
+/** A public-holiday list entry: { date, name }. */
+export function normalizeHoliday(hd) {
+  if (!hd || !isISODate(hd.date)) return null;
+  return { date: hd.date, name: cleanText(hd.name) || 'Public holiday' };
+}
+
 export function normalizeAdjustment(a) {
   if (!a || !isISODate(a.date)) return null;
   const minutes = Math.round(Number(a.minutes));
@@ -97,8 +103,11 @@ export function normalizeState(s) {
   }
   const spans = ((s && s.spans) || []).map((x) => normalizeSpan(x, config)).filter(Boolean).sort(spanOrder);
   const adjustments = ((s && s.adjustments) || []).map(normalizeAdjustment).filter(Boolean).sort(dateOrder);
+  const byDate = new Map();
+  for (const hd of ((s && s.holidays) || []).map(normalizeHoliday).filter(Boolean)) byDate.set(hd.date, hd); // last entry for a date wins
+  const holidays = [...byDate.values()].sort(dateOrder);
   const unparsed = ((s && s.unparsed) || []).filter((l) => typeof l === 'string');
-  return { config, days, spans, adjustments, unparsed };
+  return { config, days, spans, adjustments, holidays, unparsed };
 }
 
 export function cloneState(s) {
@@ -241,6 +250,41 @@ export function deleteAdjustment(state, index) {
   return normalizeState(next);
 }
 
+// Public holidays ------------------------------------------------------------
+
+export function addHoliday(state, holiday) {
+  const next = cloneState(state);
+  next.holidays.push(holiday);
+  return normalizeState(next);
+}
+
+export function updateHoliday(state, index, patch) {
+  const next = cloneState(state);
+  if (!next.holidays[index]) return state;
+  Object.assign(next.holidays[index], patch);
+  return normalizeState(next);
+}
+
+export function deleteHoliday(state, index) {
+  const next = cloneState(state);
+  next.holidays.splice(index, 1);
+  return normalizeState(next);
+}
+
+/** Add every entry of `list` whose date is not already listed. Existing entries (moved or renamed) are left alone. */
+export function loadHolidays(state, list) {
+  const next = cloneState(state);
+  const have = new Set(next.holidays.map((hd) => hd.date));
+  for (const hd of list) if (!have.has(hd.date)) { next.holidays.push({ date: hd.date, name: hd.name }); have.add(hd.date); }
+  return normalizeState(next);
+}
+
+export function clearHolidays(state) {
+  const next = cloneState(state);
+  next.holidays = [];
+  return normalizeState(next);
+}
+
 export function clearUnparsed(state) {
   const next = cloneState(state);
   next.unparsed = [];
@@ -257,6 +301,8 @@ export function mergeStates(base, other) {
   const akey = (a) => `${a.date}|${a.minutes}|${a.reason}`;
   const haveA = new Set(next.adjustments.map(akey));
   for (const a of other.adjustments) if (!haveA.has(akey(a))) next.adjustments.push(a);
+  const haveH = new Set(next.holidays.map((hd) => hd.date));
+  for (const hd of other.holidays || []) if (!haveH.has(hd.date)) next.holidays.push(hd);
   next.unparsed = [...next.unparsed, ...other.unparsed.filter((l) => !next.unparsed.includes(l))];
   return normalizeState(next);
 }
